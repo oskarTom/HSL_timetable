@@ -1,21 +1,45 @@
 #include <cpr/cpr.h>
+#include <exception>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
+#include <ostream>
+#include <stdexcept>
+#include <string>
 
 //TODO: Add error message for when can't connect to API
 
-using namespace std;
-
+std::string _api_key;
 
 void loadConfig()
 {
     std::ifstream config_stream{"hsltt.conf"};
+    if (!config_stream)
+    {
+        throw std::runtime_error("Could not find a config file!");
+    }
+
+    for (std::string line; std::getline(config_stream, line); ) {
+        std::cout << line << std::endl;
+        std::istringstream iss(line);
+        std::string id, eq, val;
+
+        if (!(iss >> id)) {
+            throw std::runtime_error("Failed to read the config file!");
+        } else if (id[0] == '#') {
+            continue;
+        } else if (!(iss >> eq >> val || eq != "=" || iss.get() != EOF )) {
+            throw std::runtime_error("Failed to read a line from config file");
+        } else if (id == "api-key") {
+            _api_key = val;
+        }
+
+    }
 }
 
 cpr::Response requestStops()
 {
-    string query = R"(
+    std::string query = R"(
     {
         stops(name: "Maunula") {
         gtfsId
@@ -49,7 +73,7 @@ cpr::Response requestStops()
     cpr::Response r = cpr::Post(
         cpr::Url{"https://api.digitransit.fi/routing/v2/hsl/gtfs/v1"},
         cpr::Header{{"Content-Type", "application/json"}},
-        cpr::Header{{"digitransit-subscription-key", API_KEY}},
+        cpr::Header{{"digitransit-subscription-key", _api_key}},
         cpr::Body{request_body.dump()}
     );
     return r;
@@ -57,7 +81,7 @@ cpr::Response requestStops()
 
 cpr::Response sendRequest()
 {
-    string query = R"(
+    std::string query = R"(
         {
         stop(id: "HSL:1282104") {
             gtfsId
@@ -91,7 +115,7 @@ cpr::Response sendRequest()
     cpr::Response r = cpr::Post(
         cpr::Url{"https://api.digitransit.fi/routing/v2/hsl/gtfs/v1"},
         cpr::Header{{"Content-Type", "application/json"}},
-        cpr::Header{{"digitransit-subscription-key", API_KEY}},
+        cpr::Header{{"digitransit-subscription-key", _api_key}},
         cpr::Body{request_body.dump()}
     );
     return r;
@@ -104,23 +128,23 @@ void printRoutes(nlohmann::json routes)
                     << (int)route["scheduledDeparture"]/60/60 ;
         std::cout <<":"<< std::setw(2) << std::setfill('0')
                     << (int)route["scheduledDeparture"]%3600/60 ;
-        std::cout << "\t" << (string)route["trip"]["route"]["shortName"] << std::endl;
+        std::cout << "\t" << (std::string)route["trip"]["route"]["shortName"] << std::endl;
     } 
 }
 
-void printRegionalRoutes(nlohmann::json stops, string name)
+void printRegionalRoutes(nlohmann::json stops, std::string name)
 {
     std::cout << std::endl;
     for (auto stop: stops) {
-        if ( string(stop["name"]).compare(name) ) continue;
+        if ( std::string(stop["name"]).compare(name) ) continue;
         nlohmann::json routes = stop["stoptimesWithoutPatterns"];
         for (auto route: routes)  {
         std::cout << std::setw(2) << std::setfill(' ') 
                     << ((int)route["scheduledDeparture"]/60/60)%24 ;
         std::cout <<":"<< std::setw(2) << std::setfill('0')
                     << (int)route["scheduledDeparture"]%3600/60 ;
-        std::cout << "\t" << std::setw(4) << std::setfill(' ') << (string)route["trip"]["route"]["shortName"] ;
-        std::cout << " " << (string)route["headsign"] << std::endl;
+        std::cout << "\t" << std::setw(4) << std::setfill(' ') << (std::string)route["trip"]["route"]["shortName"] ;
+        std::cout << " " << (std::string)route["headsign"] << std::endl;
         } 
         std::cout << std::endl;
     } 
@@ -128,6 +152,12 @@ void printRegionalRoutes(nlohmann::json stops, string name)
 
 int main(int argc, char *argv[])
 {
+    try {
+        loadConfig();
+    } catch (std::exception& e) {
+        std::cout << e.what() << std::endl;
+        return 1;
+    }
     cpr::Response r = requestStops();
 
     if (r.status_code == 200) {
@@ -138,7 +168,7 @@ int main(int argc, char *argv[])
         printRegionalRoutes(routes, "Maunula");
         // cout << "Response:\n" << json_response.dump(2) << endl;
     } else {
-        cerr << "Failed! Status code: " << r.status_code << endl;
+        std::cerr << "Failed! Status code: " << r.status_code << std::endl;
     }
 
     return 0;
