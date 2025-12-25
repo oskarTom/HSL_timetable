@@ -36,11 +36,11 @@ void loadConfig()
     }
 }
 
-cpr::Response requestStops()
+cpr::Response requestStops(const std::string stop_name)
 {
     std::string query = R"(
     {
-        stops(name: "Kamppi") {
+        stops(name: ")" + stop_name + R"(") {
             gtfsId
             name
             stoptimesWithoutPatterns {
@@ -90,7 +90,8 @@ void printRoutes(nlohmann::json stops, std::string name)
             if ( route["trip"]["route"]["mode"] == "SUBWAY" ) color_code = "33";
             else if ( route["trip"]["route"]["mode"] == "BUS" ) color_code = "34";
             else if ( route["trip"]["route"]["mode"] == "RAIL" ) color_code = "35";
-            else if ( route["trip"]["route"]["mode"] == "TRAM" ) color_code = "36";
+            else if ( route["trip"]["route"]["mode"] == "TRAM" ) color_code = "32";
+            else if ( route["trip"]["route"]["mode"] == "FERRY" ) color_code = "36";
             // else std::cout << route["trip"]["route"]["mode"] ;
             std::cout << std::setw(2) << std::setfill(' ') << ((int)route["scheduledDeparture"]/60/60)%24 ;
             std::cout <<":"<< std::setw(2) << std::setfill('0') << (int)route["scheduledDeparture"]%3600/60 ;
@@ -110,12 +111,20 @@ int main(int argc, char *argv[])
         std::cout << e.what() << std::endl;
         return 1;
     }
-    cpr::Response r = requestStops();
+
+    std::string stop_name;
+    if (argc < 2) {
+        std::cerr << "Using default stop" << std::endl;
+        stop_name = "Maunula";
+    } else {
+        stop_name = argv[1];
+    }
+    cpr::Response r = requestStops(stop_name);
 
     if (r.status_code == 200) {
         nlohmann::json json_response = nlohmann::json::parse(r.text);
         nlohmann::json routes = json_response["data"]["stops"];
-        printRoutes(routes, "Maunula");
+        printRoutes(routes, stop_name);
     } else {
         std::cerr << "Failed! Status code: " << r.status_code << std::endl;
     }
