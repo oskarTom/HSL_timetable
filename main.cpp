@@ -1,4 +1,5 @@
 #include <cpr/cpr.h>
+#include <cstdlib>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
@@ -12,7 +13,7 @@ std::string _api_key;
 
 void loadConfig()
 {
-    std::ifstream config_stream{"hsltt.conf"};
+    std::ifstream config_stream{std::string(std::getenv("HOME"))+"/.config/hsltt/hsltt.conf"};
     if (!config_stream)
     {
         throw std::runtime_error("Could not find a config file!");
