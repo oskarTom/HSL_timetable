@@ -78,59 +78,7 @@ cpr::Response requestStops()
     return r;
 }
 
-cpr::Response sendRequest()
-{
-    std::string query = R"(
-        {
-        stop(id: "HSL:1282104") {
-            gtfsId
-            name
-            stoptimesWithoutPatterns {
-                scheduledArrival
-                realtimeArrival
-                arrivalDelay
-                scheduledDeparture
-                realtimeDeparture
-                departureDelay
-                realtime
-                realtimeState
-                serviceDay
-                headsign
-                trip {
-                route {
-                    shortName
-                    longName
-                }
-                }
-            }
-            }
-        }
-    )";
-
-    nlohmann::json request_body = {
-        {"query", query}
-    };
-
-    cpr::Response r = cpr::Post(
-        cpr::Url{"https://api.digitransit.fi/routing/v2/hsl/gtfs/v1"},
-        cpr::Header{{"Content-Type", "application/json"}},
-        cpr::Header{{"digitransit-subscription-key", _api_key}},
-        cpr::Body{request_body.dump()}
-    );
-    return r;
-}
-
-void printRoutes(nlohmann::json routes)
-{
-    for (auto route: routes) {
-
-        std::cout << std::setw(2) << std::setfill(' ') << (int)route["scheduledDeparture"]/60/60 ;
-        std::cout <<":"<< std::setw(2) << std::setfill('0') << (int)route["scheduledDeparture"]%3600/60 ;
-        std::cout << "\t" << (std::string)route["trip"]["route"]["shortName"] << std::endl;
-    } 
-}
-
-void printRegionalRoutes(nlohmann::json stops, std::string name)
+void printRoutes(nlohmann::json stops, std::string name)
 {
     std::cout << std::endl;
     for (auto stop: stops) {
@@ -142,7 +90,7 @@ void printRegionalRoutes(nlohmann::json stops, std::string name)
             else if ( route["trip"]["route"]["mode"] == "BUS" ) color_code = "34";
             else if ( route["trip"]["route"]["mode"] == "RAIL" ) color_code = "35";
             else if ( route["trip"]["route"]["mode"] == "TRAM" ) color_code = "36";
-            else std::cout << route["trip"]["route"]["mode"] ;
+            // else std::cout << route["trip"]["route"]["mode"] ;
             std::cout << std::setw(2) << std::setfill(' ') << ((int)route["scheduledDeparture"]/60/60)%24 ;
             std::cout <<":"<< std::setw(2) << std::setfill('0') << (int)route["scheduledDeparture"]%3600/60 ;
             std::cout << "\033[1;" << color_code << "m";
@@ -165,11 +113,8 @@ int main(int argc, char *argv[])
 
     if (r.status_code == 200) {
         nlohmann::json json_response = nlohmann::json::parse(r.text);
-        // nlohmann::json routes = json_response["data"]["stop"]["stoptimesWithoutPatterns"];
         nlohmann::json routes = json_response["data"]["stops"];
-        // printRoutes(routes);
-        printRegionalRoutes(routes, "Maunula");
-        // cout << "Response:\n" << json_response.dump(2) << endl;
+        printRoutes(routes, "Maunula");
     } else {
         std::cerr << "Failed! Status code: " << r.status_code << std::endl;
     }
