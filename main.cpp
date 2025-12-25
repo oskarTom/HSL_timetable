@@ -1,11 +1,10 @@
 #include <cpr/cpr.h>
-#include <exception>
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <iostream>
-#include <ostream>
 #include <stdexcept>
 #include <string>
+#include <stdlib.h>
 
 //TODO: Add error message for when can't connect to API
 
@@ -20,7 +19,6 @@ void loadConfig()
     }
 
     for (std::string line; std::getline(config_stream, line); ) {
-        std::cout << line << std::endl;
         std::istringstream iss(line);
         std::string id, eq, val;
 
@@ -41,27 +39,28 @@ cpr::Response requestStops()
 {
     std::string query = R"(
     {
-        stops(name: "Maunula") {
-        gtfsId
-        name
+        stops(name: "Kamppi") {
+            gtfsId
+            name
             stoptimesWithoutPatterns {
-            scheduledArrival
-            realtimeArrival
-            arrivalDelay
-            scheduledDeparture
-            realtimeDeparture
-            departureDelay
-            realtime
-            realtimeState
-            serviceDay
-            headsign
-            trip {
-            route {
-                shortName
-                longName
+                scheduledArrival
+                realtimeArrival
+                arrivalDelay
+                scheduledDeparture
+                realtimeDeparture
+                departureDelay
+                realtime
+                realtimeState
+                serviceDay
+                headsign
+                trip {
+                    route {
+                        shortName
+                        longName
+                        mode
+                    }
+                }
             }
-            }
-        }
         }
     }
     )";
@@ -124,10 +123,9 @@ cpr::Response sendRequest()
 void printRoutes(nlohmann::json routes)
 {
     for (auto route: routes) {
-        std::cout << std::setw(2) << std::setfill(' ') 
-                    << (int)route["scheduledDeparture"]/60/60 ;
-        std::cout <<":"<< std::setw(2) << std::setfill('0')
-                    << (int)route["scheduledDeparture"]%3600/60 ;
+
+        std::cout << std::setw(2) << std::setfill(' ') << (int)route["scheduledDeparture"]/60/60 ;
+        std::cout <<":"<< std::setw(2) << std::setfill('0') << (int)route["scheduledDeparture"]%3600/60 ;
         std::cout << "\t" << (std::string)route["trip"]["route"]["shortName"] << std::endl;
     } 
 }
@@ -136,15 +134,20 @@ void printRegionalRoutes(nlohmann::json stops, std::string name)
 {
     std::cout << std::endl;
     for (auto stop: stops) {
-        if ( std::string(stop["name"]).compare(name) ) continue;
+        // if ( std::string(stop["name"]).compare(name) ) continue;
         nlohmann::json routes = stop["stoptimesWithoutPatterns"];
         for (auto route: routes)  {
-        std::cout << std::setw(2) << std::setfill(' ') 
-                    << ((int)route["scheduledDeparture"]/60/60)%24 ;
-        std::cout <<":"<< std::setw(2) << std::setfill('0')
-                    << (int)route["scheduledDeparture"]%3600/60 ;
-        std::cout << "\t" << std::setw(4) << std::setfill(' ') << (std::string)route["trip"]["route"]["shortName"] ;
-        std::cout << " " << (std::string)route["headsign"] << std::endl;
+            std::string color_code = "0";
+            if ( route["trip"]["route"]["mode"] == "SUBWAY" ) color_code = "33";
+            else if ( route["trip"]["route"]["mode"] == "BUS" ) color_code = "34";
+            else if ( route["trip"]["route"]["mode"] == "RAIL" ) color_code = "35";
+            else if ( route["trip"]["route"]["mode"] == "TRAM" ) color_code = "36";
+            else std::cout << route["trip"]["route"]["mode"] ;
+            std::cout << std::setw(2) << std::setfill(' ') << ((int)route["scheduledDeparture"]/60/60)%24 ;
+            std::cout <<":"<< std::setw(2) << std::setfill('0') << (int)route["scheduledDeparture"]%3600/60 ;
+            std::cout << "\033[1;" << color_code << "m";
+            std::cout << "\t" << std::setw(4) << std::setfill(' ') << (std::string)route["trip"]["route"]["shortName"] ;
+            std::cout << " " << (std::string)route["headsign"] << "\033[m" << std::endl;
         } 
         std::cout << std::endl;
     } 
