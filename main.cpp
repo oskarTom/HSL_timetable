@@ -7,10 +7,12 @@
 #include <string>
 #include <stdlib.h>
 
-//TODO: Add error message for when can't connect to API
+struct Config {
+    std::string api_key;
+    std::string default_stop;
+};
 
-std::string _api_key;
-std::string _default_stop;
+Config config;
 
 void loadConfig()
 {
@@ -31,9 +33,9 @@ void loadConfig()
         } else if (!(iss >> eq >> val || eq != "=" || iss.get() != EOF )) {
             throw std::runtime_error("Failed to read a line from config file");
         } else if (id == "api-key") {
-            _api_key = val;
+            config.api_key = val;
         } else if (id == "default-stop") {
-            _default_stop = val;
+            config.default_stop = val;
         }
 
     }
@@ -76,13 +78,13 @@ cpr::Response requestStops(const std::string stop_name)
     cpr::Response r = cpr::Post(
         cpr::Url{"https://api.digitransit.fi/routing/v2/hsl/gtfs/v1"},
         cpr::Header{{"Content-Type", "application/json"}},
-        cpr::Header{{"digitransit-subscription-key", _api_key}},
+        cpr::Header{{"digitransit-subscription-key", config.api_key}},
         cpr::Body{request_body.dump()}
     );
     return r;
 }
 
-void printRoutes(nlohmann::json stops, std::string name)
+void printRoutes(const nlohmann::json stops, const std::string name)
 {
     std::cout << std::endl;
     for (auto stop: stops) {
@@ -118,11 +120,12 @@ int main(int argc, char *argv[])
 
     std::string stop_name;
     if (argc < 2) {
-        if (_default_stop == "") {
-            std::cerr << "Default stop not defined!" << std::endl;
+        if (config.default_stop == "") {
+            std::cerr << "Default stop not defined!" << std::endl << std::endl;
+            std::cout << "Usage: hsltt [STOPNAME]" << std::endl << std::endl;
             return 1;
         } else {
-            stop_name = _default_stop;
+            stop_name = config.default_stop;
         }
     } else {
         stop_name = argv[1];
