@@ -84,6 +84,7 @@ void printRoutes(nlohmann::json stops, std::string name)
     std::cout << std::endl;
     for (auto stop: stops) {
         // if ( std::string(stop["name"]).compare(name) ) continue;
+        std::cout << "\033[1;m\t" << (std::string) stop["name"] << "\033[m" << std::endl;
         nlohmann::json routes = stop["stoptimesWithoutPatterns"];
         for (auto route: routes)  {
             std::string color_code = "0";
