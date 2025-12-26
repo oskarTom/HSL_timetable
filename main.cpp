@@ -10,6 +10,7 @@
 //TODO: Add error message for when can't connect to API
 
 std::string _api_key;
+std::string _default_stop;
 
 void loadConfig()
 {
@@ -31,6 +32,8 @@ void loadConfig()
             throw std::runtime_error("Failed to read a line from config file");
         } else if (id == "api-key") {
             _api_key = val;
+        } else if (id == "default-stop") {
+            _default_stop = val;
         }
 
     }
@@ -115,8 +118,12 @@ int main(int argc, char *argv[])
 
     std::string stop_name;
     if (argc < 2) {
-        std::cerr << "Using default stop" << std::endl;
-        stop_name = "Maunula";
+        if (_default_stop == "") {
+            std::cerr << "Default stop not defined!" << std::endl;
+            return 1;
+        } else {
+            stop_name = _default_stop;
+        }
     } else {
         stop_name = argv[1];
     }
