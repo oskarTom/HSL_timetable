@@ -1,5 +1,5 @@
 # HSL-Timetable
-A small CLI application for checking bus, tram, metro, railway, and ferry timetables for Helsinki Regional Transport (HSL).
+A small terminal application for checking bus, tram, metro, railway, and ferry timetables for Helsinki Regional Transport (HSL).
 
 ## Installation
 ### From source
