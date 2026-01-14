@@ -15,7 +15,7 @@ make
 ## Configuration
 ### API
 First, get your API key by following instructions from [here](https://digitransit.fi/en/developers/api-registration/).
-TThen set your API key in `$HOME/.config/hsltt/hsltt.conf` file
+Then set your API key in `$HOME/.config/hsltt/hsltt.conf` file
 
 ```
 api-key = YOUR_API_KEY
