@@ -12,7 +12,6 @@ Assuming that `g++` is installed, the source can be compiled and installed to `$
 cd HSL_timetable
 make install
 ```
-## Uninstallation
 The program can be removed by deleting the `hsltt` executable from `$HOME/.local/bin`
 ```
 make uninstall
