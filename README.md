@@ -7,11 +7,17 @@ Clone the repositroy
 ```
 git clone https://github.com/oskarTom/HSL_timetable
 ```
-Assuming that `gcc` is installed, the source can be compiled with `Makefile`
+Assuming that `g++` is installed, the source can be compiled and installed to `$HOME/.local/bin` with `Makefile`
 ```
 cd HSL_timetable
-make
+make install
 ```
+## Uninstallation
+The program can be removed by deleting the `hsltt` executable from `$HOME/.local/bin`
+```
+make uninstall
+```
+
 ## Configuration
 ### API
 First, get your API key by following instructions from [here](https://digitransit.fi/en/developers/api-registration/).
