@@ -1,4 +1,5 @@
 # HSL-Timetable
+![hsltt example](images/kamppi.gif)
 A small terminal application for checking bus, tram, metro, railway, and ferry timetables for Helsinki Regional Transport (HSL).
 
 ## Installation
